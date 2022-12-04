@@ -1,4 +1,4 @@
-#![feature(iter_next_chunk)]
+#![allow(unused)]
 use std::sync::Arc;
 
 fn split_in_two(input: &str) -> (&str, &str) {

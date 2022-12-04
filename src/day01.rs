@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 fn solve(input: &str) -> (u64, i32) {
     let max = input.split("\n\n").zip(1..).map(|(inventory, elf_number)|{
         let total_calorites = inventory.split("\n").map(|item| item.parse::<u64>().unwrap()).sum::<u64>();
