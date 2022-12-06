@@ -71,5 +71,5 @@ fn input() {
     let input = std::fs::read_to_string("input/day04.txt").unwrap();
 
     assert_eq!(513, part1(&input));
-    assert_eq!(0, part2(&input));
+    assert_eq!(878, part2(&input));
 }
