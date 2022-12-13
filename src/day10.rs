@@ -1,4 +1,3 @@
-
 struct MachineState {
     reg_x: i32,
     cycle: i32,
@@ -15,12 +14,14 @@ trait Visit {
 }
 
 struct CycleSnooper {
-    total_signal_strength: i32
+    total_signal_strength: i32,
 }
 
 impl Default for CycleSnooper {
     fn default() -> Self {
-        Self { total_signal_strength: 0  }
+        Self {
+            total_signal_strength: 0,
+        }
     }
 }
 
@@ -30,35 +31,59 @@ impl Visit for CycleSnooper {
             return;
         }
 
-        let signal_strength = cycle_number * state.reg_x; 
+        let signal_strength = cycle_number * state.reg_x;
 
         self.total_signal_strength += signal_strength;
     }
 }
 
-fn machine(input: &str, snoop: &mut CycleSnooper) {
-    let mut state= MachineState::default();
+struct CRTSnooper {}
+
+impl Default for CRTSnooper {
+    fn default() -> Self {
+        Self {}
+    }
+}
+
+impl Visit for CRTSnooper {
+    fn during_cycle(&mut self, cycle_number: i32, state: &MachineState) {
+        // dbg!(cycle_number, (cycle_number-1), state.reg_x, state.reg_x - (cycle_number-1));
+        if (state.reg_x - ((cycle_number%40)-1)).abs() < 2 {
+            print!("#");
+            // dbg!("#");
+        } else {
+            print!(" ");
+            // dbg!(".");
+        }
+        if (cycle_number) % 40 == 0 {
+            // dbg!(cycle_number);
+            println!();
+        }
+    }
+}
+
+fn machine<V: Visit>(input: &str, snoop: &mut V) {
+    let mut state = MachineState::default();
 
     for line in input.lines() {
         if line.starts_with("addx") {
             let value: i32 = line.split_once(" ").unwrap().1.parse().unwrap();
 
             snoop.during_cycle(state.cycle, &state);
-            state.cycle +=1;
+            state.cycle += 1;
             snoop.during_cycle(state.cycle, &state);
-            state.cycle +=1;
+            state.cycle += 1;
             state.reg_x += value;
-
         } else if line.starts_with("noop") {
             snoop.during_cycle(state.cycle, &state);
-            state.cycle +=1;
+            state.cycle += 1;
         } else {
             todo!()
         }
     }
 }
 
-fn part1(input:&str) -> i32 {
+fn part1(input: &str) -> i32 {
     let mut snoop = CycleSnooper::default();
 
     machine(input, &mut snoop);
@@ -66,9 +91,15 @@ fn part1(input:&str) -> i32 {
     snoop.total_signal_strength
 }
 
+fn part2(input: &str) {
+    let mut snoop = CRTSnooper::default();
+
+    machine(input, &mut snoop);
+}
+
 #[test]
-fn test () {
-   let input = "addx 15
+fn test() {
+    let input = "addx 15
 addx -11
 addx 6
 addx -3
@@ -215,11 +246,13 @@ noop
 noop
 noop";
     assert_eq!(part1(input), 13140);
+    part2(input);
 }
 
 #[test]
-fn real(){
+fn real() {
     let input = include_str!("../input/day10.txt");
 
-    assert_eq!(part1(input), 0);
+    assert_eq!(part1(input), 13680);
+    part2(input);
 }
