@@ -155,12 +155,12 @@ fn part2(input: &str) -> i32 {
         }
     }
 
-    for y in -30..30 {
-        for x in -30..30 {
-            print!("{}", if positions.contains(&Pos2d{x,y}) {"#"} else {" "});
-        }
-        println!();
-    }
+    // for y in -30..30 {
+    //     for x in -30..30 {
+    //         print!("{}", if positions.contains(&Pos2d{x,y}) {"#"} else {" "});
+    //     }
+    //     println!();
+    // }
 
     positions.len() as i32
 }
