@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashSet, HashMap};
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
 #[derive(Clone, Copy, Eq, Hash, PartialEq, Debug, Ord, PartialOrd)]
 struct Pos2d {
@@ -45,7 +45,7 @@ impl Default for Pos2d {
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct State {
-    cost: usize,
+    cost: i32,
     position: Pos2d,
 }
 
@@ -57,7 +57,9 @@ impl Ord for State {
         // Notice that the we flip the ordering on costs.
         // In case of a tie we compare positions - this step is necessary
         // to make implementations of `PartialEq` and `Ord` consistent.
-        other.cost.cmp(&self.cost)
+        other
+            .cost
+            .cmp(&self.cost)
             .then_with(|| self.position.cmp(&other.position))
     }
 }
@@ -75,31 +77,58 @@ impl PartialOrd for State {
 // to each node. This implementation isn't memory-efficient as it may leave duplicate
 // nodes in the queue. It also uses `usize::MAX` as a sentinel value,
 // for a simpler implementation.
-fn shortest_path(map: &str, start: Pos2d, goal: Pos2d) -> Option<usize> {
+fn shortest_path(map: &str, size: (usize, usize)) -> Option<i32> {
+    let map = map.as_bytes();
+
+    let mut start = Pos2d::default();
+    let mut goal = Pos2d::default();
+
+    for x in 0..size.0 as i32 {
+        for y in 0..size.1 as i32 {
+            if get(map, size, &Pos2d { x, y }).1 == 'S' {
+                start = Pos2d { x, y };
+            } else if get(map, size, &Pos2d { x, y }).1 == 'E' {
+                goal = Pos2d { x, y };
+            }
+        }
+    }
+    // dbg!(start, goal);
+
     // dist[node] = current shortest distance from `start` to `node`
-    let mut dist: HashMap<Pos2d, usize> = Default::default();
+    let mut dist: HashMap<Pos2d, i32> = Default::default();
 
     let mut heap = BinaryHeap::new();
 
     // We're at `start`, with a zero cost
     dist.insert(start, 0);
-    heap.push(State { cost: 0, position: start });
+    heap.push(State {
+        cost: 0,
+        position: start,
+    });
 
     // Examine the frontier with lower cost nodes first (min-heap)
     while let Some(State { cost, position }) = heap.pop() {
         // Alternatively we could have continued to find all shortest paths
-        if position == goal { return Some(cost); }
+        if position == goal {
+            return Some(cost);
+        }
 
         // Important as we may have already found a better way
-        if dist.contains_key(&position) && cost > *dist.get(&position).unwrap() { continue; }
+        if dist.contains_key(&position) && cost > *dist.get(&position).unwrap() {
+            continue;
+        }
 
         // For each node we can reach, see if we can find a way with
         // a lower cost going through this node
-        for edge in edges(map, position) {
-            let next = State { cost: cost + edge.cost, position: edge.node };
+        for edge in edges(map, size, &position) {
+            let next = State {
+                cost: cost + 1,
+                position: edge,
+            };
 
             // If so, add it to the frontier and continue
-            if !dist.contains_key(&next.position) || next.cost < *dist.get(&next.position).unwrap() {
+            if !dist.contains_key(&next.position) || next.cost < *dist.get(&next.position).unwrap()
+            {
                 heap.push(next);
                 // Relaxation, we have now found a better way
                 dist.insert(next.position, next.cost);
@@ -107,6 +136,63 @@ fn shortest_path(map: &str, start: Pos2d, goal: Pos2d) -> Option<usize> {
         }
     }
 
+    for y in 0..size.1 as i32 {
+        for x in 0..size.0 as i32 {
+            print!("{}", dist.get(&Pos2d{x,y}).unwrap_or(&0)%10);
+        }
+        println!();
+    }
+
     // Goal not reachable
     None
+}
+
+fn get(map: &[u8], size: (usize, usize), position: &Pos2d) -> (u8,char) {
+    let size = size.0 as i32;
+    let &c = map
+        .get((position.y * (size + 1) + position.x) as usize)
+        .unwrap();
+    if c == 'S' as u8 {
+        (0, 'S')
+    } else if c == 'E' as u8 {
+        (26, 'E')
+    } else {
+        (c - 'a' as u8, '\0')
+    }
+}
+
+fn edges(map: &[u8], size: (usize, usize), position: &Pos2d) -> Vec<Pos2d> {
+    [
+        position.left(),
+        position.right(),
+        position.down(),
+        position.up(),
+    ]
+    .into_iter()
+    .filter(|p| p.x >= 0 && p.y >= 0 && p.y < size.1 as i32 && p.x < size.0 as i32)
+    .filter(|p| (get(map, size, &p).0) <= get(map, size, position).0+1)
+    .collect()
+}
+
+fn part1(input: &str, size: (usize, usize)) -> i32 {
+    shortest_path(input,size).unwrap()
+} 
+#[test]
+fn test() {
+    let input = "Sabqponm
+abcryxxl
+accszExk
+acctuvwj
+abdefghi";
+    let size = (8,5);
+
+    assert_eq!(part1(input, size), 31);
+}
+
+#[test]
+fn real() {
+    let input = include_str!("../input/day12.txt");
+    let size = (64, 41);
+
+    assert_eq!(part1(input, size), 31);
 }
