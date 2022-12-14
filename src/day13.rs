@@ -18,6 +18,7 @@ impl<'a> From<&mut Peekable<Chars<'a>>> for Value {
                 let mut values = vec![];
                 loop {
                     if input.peek() == Some(&']') {
+                        input.next().unwrap();
                         break;
                     }
                     let value: Value = input.into();
@@ -60,7 +61,7 @@ impl<'a> From<&mut Peekable<Chars<'a>>> for Value {
 
 impl From<&str> for Value {
     fn from(value: &str) -> Self {
-        dbg!(value);
+        // dbg!(value);
         let mut input = value.chars().peekable();
         Value::from(&mut input)
     }
@@ -97,17 +98,60 @@ fn part1(input: &str) -> i32 {
 
     for (pair, index) in input.split("\n\n").zip(1..) {
         let mut parts = pair.split("\n");
-        dbg!("comparing", index);
+        // dbg!("comparing", index);
         let left:Value = parts.next().unwrap().into();
         let right:Value = parts.next().unwrap().into();
 
-        dbg!("right order", left <= right);
+        // dbg!("right order", left <= right);
         if left <= right {
             count+= index;
         }
     }
 
     count
+}
+
+fn part2(input: &str) -> i32{
+    let mut input: Vec<_> = input.lines().filter(|line|line.len() != 0).map(Value::from).collect();
+
+    input.push(Value::List(vec![Value::List(vec![Value::Literal(2)])]));
+    input.push(Value::List(vec![Value::List(vec![Value::Literal(6)])]));
+    input.sort();
+
+    let divider1 = input.iter().zip(1..).find(|(v, _index)| 
+        match v { 
+            Value::List(l) => 
+                l.len() == 1 
+                && match &l[0] { 
+                    Value::List(l) => 
+                        l.len() == 1 
+                        && match &l[0] {
+                            Value::Literal(2) => true, 
+                            _ => false}, 
+                    _ => false
+                },
+            _ => false
+        }).unwrap();
+
+    let divider2 = input.iter().zip(1..).find(|(v, _index)| 
+        match v { 
+            Value::List(l) => 
+                l.len() == 1 
+                && match &l[0] { 
+                    Value::List(l) => 
+                        l.len() == 1 
+                        && match &l[0] {
+                            Value::Literal(6) => true, 
+                            _ => false}, 
+                    _ => false
+                },
+            _ => false
+        }).unwrap();
+
+    let divider1 = divider1.1;
+    let divider2 = divider2.1;
+
+    divider1 * divider2
 }
 
 #[test]
@@ -156,11 +200,13 @@ fn test() {
 [1,[2,[3,[4,[5,6,0]]]],8,9]";
 
     assert_eq!(part1(input), 13);
+    assert_eq!(part2(input), 140);
 }
 
 #[test]
 fn real() {
     let input = include_str!("../input/day13.txt");
 
-    assert_eq!(part1(input), 0);
+    assert_eq!(part1(input), 5503);
+    assert_eq!(part2(input), 0);
 }
