@@ -77,21 +77,8 @@ impl PartialOrd for State {
 // to each node. This implementation isn't memory-efficient as it may leave duplicate
 // nodes in the queue. It also uses `usize::MAX` as a sentinel value,
 // for a simpler implementation.
-fn shortest_path(map: &str, size: (usize, usize)) -> Option<i32> {
-    let map = map.as_bytes();
+fn shortest_path(map: &[u8], size: (usize, usize), start: &[Pos2d], goal: Pos2d) -> Option<i32> {
 
-    let mut start = Pos2d::default();
-    let mut goal = Pos2d::default();
-
-    for x in 0..size.0 as i32 {
-        for y in 0..size.1 as i32 {
-            if get(map, size, &Pos2d { x, y }).1 == 'S' {
-                start = Pos2d { x, y };
-            } else if get(map, size, &Pos2d { x, y }).1 == 'E' {
-                goal = Pos2d { x, y };
-            }
-        }
-    }
     // dbg!(start, goal);
 
     // dist[node] = current shortest distance from `start` to `node`
@@ -100,11 +87,13 @@ fn shortest_path(map: &str, size: (usize, usize)) -> Option<i32> {
     let mut heap = BinaryHeap::new();
 
     // We're at `start`, with a zero cost
-    dist.insert(start, 0);
-    heap.push(State {
-        cost: 0,
-        position: start,
-    });
+    for start in start {
+        dist.insert(*start, 0);
+        heap.push(State {
+            cost: 0,
+            position: *start,
+        });
+    }
 
     // Examine the frontier with lower cost nodes first (min-heap)
     while let Some(State { cost, position }) = heap.pop() {
@@ -175,7 +164,42 @@ fn edges(map: &[u8], size: (usize, usize), position: &Pos2d) -> Vec<Pos2d> {
 }
 
 fn part1(input: &str, size: (usize, usize)) -> i32 {
-    shortest_path(input,size).unwrap()
+
+    let map = input.as_bytes();
+    let mut start = Pos2d::default();
+    let mut goal = Pos2d::default();
+
+    for x in 0..size.0 as i32 {
+        for y in 0..size.1 as i32 {
+            if get(map, size, &Pos2d { x, y }).1 == 'S' {
+                start = Pos2d { x, y };
+            } else if get(map, size, &Pos2d { x, y }).1 == 'E' {
+                goal = Pos2d { x, y };
+            }
+        }
+    }
+
+    shortest_path(map, size, &[start], goal).unwrap()
+} 
+fn part2(input: &str, size: (usize, usize)) -> i32 {
+
+    let map = input.as_bytes();
+    let mut start = Vec::default();
+    let mut goal = Pos2d::default();
+
+    for x in 0..size.0 as i32 {
+        for y in 0..size.1 as i32 {
+            if get(map, size, &Pos2d { x, y }).1 == 'S' {
+                start.push(Pos2d{ x, y });
+            } else if get(map, size, &Pos2d { x, y }).0 == 0 {
+                start.push(Pos2d{ x, y });
+            } else if get(map, size, &Pos2d { x, y }).1 == 'E' {
+                goal = Pos2d { x, y };
+            }
+        }
+    }
+
+    shortest_path(map, size, &start, goal).unwrap()
 } 
 #[test]
 fn test() {
@@ -187,6 +211,7 @@ abdefghi";
     let size = (8,5);
 
     assert_eq!(part1(input, size), 31);
+    assert_eq!(part2(input, size), 29);
 }
 
 #[test]
@@ -194,5 +219,6 @@ fn real() {
     let input = include_str!("../input/day12.txt");
     let size = (64, 41);
 
-    assert_eq!(part1(input, size), 31);
+    assert_eq!(part1(input, size), 370);
+    assert_eq!(part2(input, size), 363);
 }

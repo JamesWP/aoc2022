@@ -63,5 +63,5 @@ fn day_01_part_02() {
 fn day_01_part_02_real() {
     let data = std::fs::read_to_string(format!("input/day{:02}.txt", 1)).unwrap();
 
-    assert_eq!(0, solve_02(data.as_str()));
+    assert_eq!(206582, solve_02(data.as_str()));
 }

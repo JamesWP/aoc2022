@@ -158,5 +158,5 @@ fn test_part_01_real() {
     let input = std::fs::read_to_string("input/day03.txt").unwrap();
 
     assert_eq!(8394, rucksacks(&input));
-    assert_eq!(0, groups(&input));
+    assert_eq!(2413, groups(&input));
 }

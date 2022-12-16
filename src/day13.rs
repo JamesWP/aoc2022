@@ -208,5 +208,5 @@ fn real() {
     let input = include_str!("../input/day13.txt");
 
     assert_eq!(part1(input), 5503);
-    assert_eq!(part2(input), 0);
+    assert_eq!(part2(input), 20952);
 }

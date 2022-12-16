@@ -134,5 +134,5 @@ fn test_part_01_real() {
     let input = std::fs::read_to_string("input/day02.txt").unwrap();
 
     assert_eq!(11906, total_score(&input));
-    assert_eq!(0, new_total_score(&input));
+    assert_eq!(11186, new_total_score(&input));
 }
